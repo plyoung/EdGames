@@ -1,7 +1,12 @@
 # EdGames
 
-Games in the Unity Editor.
-Go `Window > Games` to open a game window.
+Games in the Unity Editor. Go `Window > Games` to open a game window.
+
+### Why?
+
+Cause I can :p
+
+It is a fun way to try out some game mechanics while also sharpening up my editor coding skills.
 
 Wanna tip me? Visit my [Patreon page](https://www.patreon.com/plyoung).
 
