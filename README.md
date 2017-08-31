@@ -10,8 +10,10 @@ Cause I can :p
 
 It is a fun way to try out some game mechanics while also sharpening up my editor coding skills.
 
-Wanna tip me? Visit my [Patreon page](https://www.patreon.com/plyoung).
-
+[![Follow on Twitter](http://www.plyoung.com/img/buttons/twitter_s.png)](https://twitter.com/pl_young) 
+[![Unity Asset Store](http://www.plyoung.com/img/buttons/assetstore_s.png)](https://assetstore.unity.com/publishers/380) 
+[![Donate](http://www.plyoung.com/img/buttons/paypal_s.png)](https://www.paypal.me/plyoung) 
+[![Patreon](http://www.plyoung.com/img/buttons/patreon_s.png)](https://www.patreon.com/plyoung) 
 
 ![blocksgame](https://user-images.githubusercontent.com/837362/29765355-23663ad2-8bdb-11e7-9d7e-d503792d114e.gif)
 
