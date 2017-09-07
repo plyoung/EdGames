@@ -17,5 +17,5 @@ It is a fun way to try out some game mechanics while also sharpening up my edito
 
 ![blocksgame](https://user-images.githubusercontent.com/837362/29765355-23663ad2-8bdb-11e7-9d7e-d503792d114e.gif)
 
-![block_game](https://user-images.githubusercontent.com/837362/29765340-19a5ad8e-8bdb-11e7-896d-87311324859d.png)
+![bubblegame](https://user-images.githubusercontent.com/837362/30164267-28dcfc7c-93dc-11e7-8280-98ab9a1f9672.gif)
 
