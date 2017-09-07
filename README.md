@@ -15,7 +15,5 @@ It is a fun way to try out some game mechanics while also sharpening up my edito
 [![Donate](http://www.plyoung.com/img/buttons/paypal_s.png)](https://www.paypal.me/plyoung) 
 [![Patreon](http://www.plyoung.com/img/buttons/patreon_s.png)](https://www.patreon.com/plyoung) 
 
-![blocksgame](https://user-images.githubusercontent.com/837362/29765355-23663ad2-8bdb-11e7-9d7e-d503792d114e.gif)
-
-![bubblegame](https://user-images.githubusercontent.com/837362/30164267-28dcfc7c-93dc-11e7-8280-98ab9a1f9672.gif)
+![blocksgame](https://user-images.githubusercontent.com/837362/29765355-23663ad2-8bdb-11e7-9d7e-d503792d114e.gif) ![bubblegame](https://user-images.githubusercontent.com/837362/30164267-28dcfc7c-93dc-11e7-8280-98ab9a1f9672.gif)
 
