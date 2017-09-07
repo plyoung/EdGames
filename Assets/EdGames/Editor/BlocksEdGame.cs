@@ -1,7 +1,6 @@
 ﻿//#define DEBUG_OPTIONS
 //#define DEBUG_RENDER
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -15,8 +14,18 @@ namespace EdGames
 		private const int GridHeight = 20;
 		private const int CellSize = 20;
 		private const float BlockMoveMax = CellSize * 0.1f;
-		private const float SoftDropDpeed = 300f;
+		private const float SoftDropSpeed = 300f;
 		private const float SpeedInc = 1f;
+
+		private static readonly GUIContent GC_Help = new GUIContent("?");
+		private static readonly GUIContent GC_Reset = new GUIContent("Reset");
+		private static readonly GUIContent GC_Label = new GUIContent("Blocks Game");
+		private static readonly GUIContent[] GC_HelpLines =
+			{
+				new GUIContent("<- -> arrow keys to move"),
+				new GUIContent("up arrow key to rotate"),
+				new GUIContent("down arrow key to drop faster"),
+			};
 
 		private static readonly Color[] BlockColours = 
 			{
@@ -89,7 +98,8 @@ namespace EdGames
 		private Rect boardRect;
 		private Rect cellRect;
 		private Rect labelRect;
-		private Rect buttonRect;
+		private Rect helpButtonRect;
+		private Rect resetButtonRect;
 
 		[System.NonSerialized] private int blockType = -1;
 		private int[] grid = new int[GridWidth * GridHeight];
@@ -104,7 +114,7 @@ namespace EdGames
 
 		// ------------------------------------------------------------------------------------------------------------------
 
-		[MenuItem("Window/Games/Blocks Game &g")]
+		[MenuItem("Window/Games/Blocks Game")]
 		private static void OpenBlocksEdGame()
 		{
 			GetWindow<BlocksEdGame>("Blocks Game");
@@ -115,9 +125,10 @@ namespace EdGames
 			boardRect = new Rect(5, CellSize * 2 + 5, CellSize * GridWidth + 2, CellSize * GridHeight + 2);
 			cellRect = new Rect(0, 0, CellSize, CellSize);
 			labelRect = new Rect(5, 10, boardRect.width, 20);
-			buttonRect = new Rect(boardRect.xMax - 50, 13, 50, 15);
+			helpButtonRect = new Rect(boardRect.xMax - 20, 13, 20, 15);
+			resetButtonRect = new Rect(helpButtonRect.x - 50, 13, 50, 15);
 			minSize = new Vector2(boardRect.width + 10, boardRect.height + (CellSize * 2) + 10);
-			GenerateAssets();
+			GenerateAssets(); 
 			ResetGame();
 		}
 
@@ -182,15 +193,14 @@ namespace EdGames
 				softDrop = false;
 			}
 
-				// move block down
-				AdvanceBlock();
+			// move block down
+			AdvanceBlock();
 
 			// check if should snap in yet
 			if (ShouldSnapIn())
 			{
-				if (SnapBlock())
+				if (SnapBlock()) // game over if this returns true
 				{
-					// game over if this returns true
 					gameActive = false;
 				}
 				else
@@ -217,6 +227,7 @@ namespace EdGames
 
 		private void ResetGame()
 		{
+			time = EditorApplication.timeSinceStartup;
 			gameActive = true;
 			softDrop = false;
 			score = 0;
@@ -242,7 +253,7 @@ namespace EdGames
 			Vector2 oldPos = blockPos;
 			int[,] oldShape = block;
 
-			block = RotateMatrix(block, blockWH);
+			block = EdGameUtil.RotateMatrix(block, blockWH);
 
 			// check if rotated while next to a wall and if block is now outside of board
 			int res = 0;
@@ -276,10 +287,6 @@ namespace EdGames
 			}
 		}
 
-		private void DropBlock()
-		{
-		}
-
 		private void AdvanceBlock()
 		{
 			float deltatime = (float)(EditorApplication.timeSinceStartup - time);
@@ -288,7 +295,7 @@ namespace EdGames
 			Vector2 oldPos = blockPos;
 			if (softDrop)
 			{
-				blockPos.y += Mathf.Min((speed > SoftDropDpeed ? speed : SoftDropDpeed) * deltatime, BlockMoveMax);
+				blockPos.y += Mathf.Min((speed > SoftDropSpeed ? speed : SoftDropSpeed) * deltatime, BlockMoveMax);
 			}
 			else
 			{
@@ -367,7 +374,7 @@ namespace EdGames
 		private bool IsOverFilledCells(bool below)
 		{
 			int ox, oy;
-			CalcCellPos(blockPos, below, out ox, out oy);
+			EdGameUtil.CalcCellPos(boardRect, blockPos, CellSize, below, out ox, out oy);
 			if (below) oy++;
 			for (int x = 0; x < blockWH; x++)
 			{
@@ -394,7 +401,7 @@ namespace EdGames
 		private bool SnapBlock()
 		{
 			int ox, oy;
-			CalcCellPos(blockPos, true, out ox, out oy);
+			EdGameUtil.CalcCellPos(boardRect, blockPos, CellSize, true, out ox, out oy);
 			for (int x = 0; x < blockWH; x++)
 			{
 				for (int y = 0; y < blockWH; y++)
@@ -408,21 +415,6 @@ namespace EdGames
 				}
 			}
 			return false;
-		}
-
-		private void CalcCellPos(Vector2 p, bool floor, out int x, out int y)
-		{
-			p = new Vector2(p.x - boardRect.x, p.y - boardRect.y);
-			if (floor)
-			{
-				x = Mathf.FloorToInt(p.x / CellSize);
-				y = Mathf.FloorToInt(p.y / CellSize);
-			}
-			else
-			{
-				x = Mathf.RoundToInt(p.x / CellSize);
-				y = Mathf.RoundToInt(p.y / CellSize);
-			}
 		}
 
 		private void CheckLines()
@@ -461,7 +453,7 @@ namespace EdGames
 				FallLinesAbove(firstFoundRow);
 
 				// run check again since new lines might have formed
-				if (linesCount > 0) CheckLines();
+				CheckLines();
 			}
 		}
 
@@ -599,9 +591,14 @@ namespace EdGames
 			// UI
 			GUI.Label(labelRect, string.Format("Score: {0}", score), EditorStyles.largeLabel);
 
-			if (GUI.Button(buttonRect, "Reset"))
+			if (GUI.Button(resetButtonRect, GC_Reset, EditorStyles.miniButtonLeft))
 			{
 				ResetGame();
+			}
+
+			if (GUI.Button(helpButtonRect, GC_Help, EditorStyles.miniButtonRight))
+			{
+				EdGameHelpWindow.ShowWindow(GC_Label, GC_HelpLines);
 			}
 
 			if (ev.type == EventType.Repaint)
@@ -682,20 +679,14 @@ namespace EdGames
 
 			// create the background
 			textures[0] = new Texture2D(4, 4, TextureFormat.RGBA32, false);
-			TextureFill(textures[0], cBlack);
-			TextureDrawHLine(textures[0], cWhite, 0, 0, 4);
-			TextureDrawHLine(textures[0], cWhite, 0, 3, 4);
-			TextureDrawVLine(textures[0], cWhite, 0, 0, 4);
-			TextureDrawVLine(textures[0], cWhite, 3, 0, 4);
+			EdGameUtil.TextureFill(textures[0], cBlack);
+			EdGameUtil.TextureRect(textures[0], cWhite, 0, 0, 3, 3);
 
 			// create the cell/block texture
 			textures[1] = new Texture2D(CellSize, CellSize, TextureFormat.RGBA32, false);
-			TextureFill(textures[1], cWhite);
-			TextureFillRect(textures[1], cGrey, CellSize / 2 - 2, CellSize / 2 - 2, 4, 4);
-			TextureDrawHLine(textures[1], cGrey, 0, 0, CellSize);
-			TextureDrawHLine(textures[1], cGrey, 0, CellSize - 1, CellSize);
-			TextureDrawVLine(textures[1], cGrey, 0, 0, CellSize);
-			TextureDrawVLine(textures[1], cGrey, CellSize - 1, 0, CellSize);
+			EdGameUtil.TextureFill(textures[1], cWhite);
+			EdGameUtil.TextureFillRect(textures[1], cGrey, CellSize / 2 - 2, CellSize / 2 - 2, 4, 4);
+			EdGameUtil.TextureRect(textures[1], cGrey, 0, 0, CellSize-1, CellSize-1);
 
 			// apply common texture settings
 			foreach (Texture2D t in textures)
@@ -715,112 +706,6 @@ namespace EdGames
 			{
 				if (t != null) DestroyImmediate(t);
 			}
-		}
-
-		// fills a texture with colour
-		private void TextureFill(Texture2D t, Color32 c)
-		{
-			Color32[] arr = t.GetPixels32();
-			for (int i = 0; i < arr.Length; i++)
-			{
-				arr[i] = c;
-			}
-
-			t.SetPixels32(arr);
-			t.Apply();
-		}
-
-		// fills a texture with colour. note 0x0 is at bottom-left of texture
-		private void TextureFillRect(Texture2D t, Color32 c, int x, int y, int w, int h)
-		{
-			if (h + y > t.height)
-			{
-				Debug.LogWarning("Rect too heigh to fit in texture");
-				h = t.height - y;
-			}
-
-			if (w + x > t.width)
-			{
-				Debug.LogWarning("Rect too wide to fit in texture");
-				w = t.width - x;
-			}
-
-			Color32[] arr = t.GetPixels32();
-			for (int i = x; i < x + w; i++)
-			{
-				for (int j = y; j < y + h; j++)
-				{
-					arr[j * t.width + i] = c;
-				}
-			}
-
-			t.SetPixels32(arr);
-			t.Apply();
-		}
-
-		// draw vertical line on texture (towards top). note 0x0 is at bottom-left of texture
-		private void TextureDrawVLine(Texture2D t, Color32 c, int x, int y, int h)
-		{
-			if (y + h > t.height)
-			{
-				Debug.LogWarning("Line too heigh to fit in texture");
-				h = t.height - y;
-			}
-
-			Color32[] arr = t.GetPixels32();
-			for (int j = y; j < y + h; j++)
-			{
-				arr[j * t.width + x] = c;
-			}
-
-			t.SetPixels32(arr);
-			t.Apply();
-		}
-
-		// draw horizontal line on texture (towards bottom). note 0x0 is at bottom-left of texture
-		private void TextureDrawHLine(Texture2D t, Color32 c, int x, int y, int w)
-		{
-			if (x + w > t.width)
-			{
-				Debug.LogWarning("Line too wide to fit in texture");
-				w = t.width - x;
-			}
-
-			Color32[] arr = t.GetPixels32();
-			int offs = y * t.width;
-			for (int i = x; i < x + w; i++)
-			{
-				arr[offs + i] = c;
-			}
-
-			t.SetPixels32(arr);
-			t.Apply();
-		}
-
-		private static int[,] RotateMatrix(int[,] m, int n)
-		{
-			int[,] res = new int[n, n];
-			for (int i = 0; i < n; i++)
-			{
-				for (int j = 0; j < n; j++)
-				{
-					res[i, j] = m[n - j - 1, i];
-				}
-			}
-			return res;
-		}
-
-		private static int[,] RotateMatrixReverse(int[,] m, int n)
-		{
-			int[,] res = new int[n, n];
-			for (int i = 0; i < n; i++)
-			{
-				for (int j = 0; j < n; j++)
-				{
-					res[i, j] = m[j, n - i - 1];
-				}
-			}
-			return res;
 		}
 
 		// ------------------------------------------------------------------------------------------------------------------
